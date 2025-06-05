@@ -1,5 +1,5 @@
-[![PyPI version](https://img.shields.io/pypi/v/deepseek_chat_sdk.svg)](https://pypi.org/project/deepseek_chat_sdk/)
-[![Downloads](https://static.pepy.tech/badge/deepseek_chat_sdk)](https://pepy.tech/project/deepseek_chat_sdk)
+[![PyPI version](https://img.shields.io/pypi/v/deepseek-chat.svg)](https://pypi.org/project/deepseek-chat/)
+[![Downloads](https://static.pepy.tech/badge/deepseek-chat/)](https://pepy.tech/project/deepseek-chat/)
 
 # 🛰️ deepseek-chat-sdk
 
