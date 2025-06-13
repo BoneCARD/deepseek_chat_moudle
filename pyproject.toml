@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "deepseek_chat"
-version = "0.1.0"
+version = "0.1.1"
 description = "Thin DeepSeek Chat wrapper with Mongo-backed conversation tree."
 authors = [
   { name = "bonecard", email = "guxiaowa77@gmail.com" }
@@ -17,6 +17,7 @@ dependencies = [
   "requests>=2.31",
   "pymongo>=4.6",
   "pydantic>=2.7",
+  "pydantic-settings>=2.0",
   "tiktoken>=0.6"  # optional，但放依赖里省心
 ]
 
