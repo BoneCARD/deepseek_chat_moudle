@@ -13,18 +13,18 @@ jobs:
   fetch-model:
     runs-on: ubuntu-latest
     steps:
-      - name: Download multilingual Whisper tiny q5_1 model
+      - name: Download multilingual Whisper small q5_1 model
         run: |
           set -euo pipefail
           curl -L --fail --retry 5 --retry-delay 3 \
-            'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny-q5_1.bin?download=true' \
-            -o ggml-tiny-q5_1.bin
-          echo '818710568da3ca15689e31a743197b520007872ff9576237bda97bd1b469c3d7  ggml-tiny-q5_1.bin' | sha256sum -c -
+            'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small-q5_1.bin?download=true' \
+            -o ggml-small-q5_1.bin
+          echo 'ae85e4a935d7a567bd102fe55afc16bb595bdb618e11b2fc7591bc08120411bb  ggml-small-q5_1.bin' | sha256sum -c -
       - name: Upload model artifact
         uses: actions/upload-artifact@v4
         with:
-          name: whisper-tiny-q5_1-model
-          path: ggml-tiny-q5_1.bin
+          name: whisper-small-q5_1-model
+          path: ggml-small-q5_1.bin
           if-no-files-found: error
           retention-days: 1
           compression-level: 0
