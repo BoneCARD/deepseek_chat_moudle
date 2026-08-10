@@ -1,0 +1,29 @@
+name: Temporary Whisper Model Fetch
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  fetch-model:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Download multilingual Whisper large-v3-turbo q5_0 model
+        run: |
+          set -euo pipefail
+          curl -L --fail --retry 5 --retry-delay 3 \
+            'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo-q5_0.bin?download=true' \
+            -o ggml-large-v3-turbo-q5_0.bin
+          echo 'e050f7970618a659205450ad97eb95a18d69c9ee  ggml-large-v3-turbo-q5_0.bin' | sha1sum -c -
+      - name: Upload model artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: whisper-large-v3-turbo-q5_0-model
+          path: ggml-large-v3-turbo-q5_0.bin
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
