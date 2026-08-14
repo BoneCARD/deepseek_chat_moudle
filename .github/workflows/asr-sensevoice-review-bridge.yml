@@ -1,0 +1,55 @@
+name: ASR SenseVoice Review Bridge
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/asr-sensevoice-review-bridge.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Prepare verified review bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p bundle runtime
+
+          curl -L --fail --retry 3 \
+            https://github.com/modelscope/FunASR/releases/download/runtime-llamacpp-v0.1.9/funasr-llamacpp-linux-x64-avx2.tar.gz \
+            -o funasr.tar.gz
+          echo '51f33822a5191f7963d8ceedba2dd76fe7d810a4388b931b25b8be4f1a8e320d  funasr.tar.gz' | sha256sum -c -
+          tar -xzf funasr.tar.gz -C runtime
+          cp runtime/llama-funasr-sensevoice bundle/llama-funasr-sensevoice
+          chmod +x bundle/llama-funasr-sensevoice
+
+          curl -L --fail --retry 3 \
+            'https://huggingface.co/FunAudioLLM/SenseVoiceSmall-GGUF/resolve/main/sensevoice-small-q8.gguf?download=true' \
+            -o bundle/sensevoice-small-q8.gguf
+          echo '4ae45c94422de949b387e2e0fb10d7e14e4c42c69db30c3444ecc7d4b844b7c5  bundle/sensevoice-small-q8.gguf' | sha256sum -c -
+          test "$(stat -c%s bundle/sensevoice-small-q8.gguf)" = '254208320'
+
+          sha256sum bundle/llama-funasr-sensevoice bundle/sensevoice-small-q8.gguf > bundle/SHA256SUMS.txt
+          cat > bundle/MANIFEST.txt <<'EOF'
+          purpose=Personal OS local Chinese ASR review only
+          runtime=FunASR llama.cpp runtime v0.1.9 linux-x64-avx2
+          engine=llama-funasr-sensevoice
+          model=SenseVoiceSmall-Q8
+          model_size=254208320
+          model_sha256=4ae45c94422de949b387e2e0fb10d7e14e4c42c69db30c3444ecc7d4b844b7c5
+          EOF
+          ls -lh bundle/*
+
+      - name: Upload verified review bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: sensevoice-small-q8-review-verified
+          path: bundle/
+          retention-days: 90
+          compression-level: 1
