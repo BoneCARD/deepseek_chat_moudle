@@ -1,0 +1,34 @@
+name: ASR Benchmark FSMN-VAD Bridge
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/asr-benchmark-vad.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download FSMN-VAD
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p bundle
+          curl -L --fail --retry 3 \
+            'https://huggingface.co/FunAudioLLM/fsmn-vad-GGUF/resolve/main/fsmn-vad.gguf?download=true' \
+            -o bundle/fsmn-vad.gguf
+          sha256sum bundle/fsmn-vad.gguf | tee bundle/SHA256SUMS.txt
+          ls -lh bundle/fsmn-vad.gguf bundle/SHA256SUMS.txt
+
+      - name: Upload benchmark model
+        uses: actions/upload-artifact@v4
+        with:
+          name: asr-benchmark-fsmn-vad-v1
+          path: bundle/
+          retention-days: 1
+          compression-level: 1
