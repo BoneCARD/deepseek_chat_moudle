@@ -1,0 +1,35 @@
+name: ASR Benchmark Whisper Turbo Bridge
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/asr-benchmark-whisper-turbo.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Download Whisper large-v3-turbo q5_0
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p bundle
+          curl -L --fail --retry 3 \
+            'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo-q5_0.bin?download=true' \
+            -o bundle/ggml-large-v3-turbo-q5_0.bin
+          echo 'e050f7970618a659205450ad97eb95a18d69c9ee  bundle/ggml-large-v3-turbo-q5_0.bin' | sha1sum -c -
+          sha256sum bundle/ggml-large-v3-turbo-q5_0.bin | tee bundle/SHA256SUMS.txt
+          ls -lh bundle/ggml-large-v3-turbo-q5_0.bin bundle/SHA256SUMS.txt
+
+      - name: Upload benchmark model
+        uses: actions/upload-artifact@v4
+        with:
+          name: asr-benchmark-whisper-turbo-q5-v1
+          path: bundle/
+          retention-days: 1
+          compression-level: 1
