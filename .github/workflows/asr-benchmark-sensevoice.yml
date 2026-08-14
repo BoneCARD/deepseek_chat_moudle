@@ -1,0 +1,58 @@
+name: ASR Benchmark SenseVoice Bridge
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/asr-benchmark-sensevoice.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Prepare bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p bundle/funasr
+
+          curl -L --fail --retry 3 \
+            https://github.com/modelscope/FunASR/releases/download/runtime-llamacpp-v0.1.9/funasr-llamacpp-linux-x64-avx2.tar.gz \
+            -o funasr.tar.gz
+          echo '51f33822a5191f7963d8ceedba2dd76fe7d810a4388b931b25b8be4f1a8e320d  funasr.tar.gz' | sha256sum -c -
+          tar -xzf funasr.tar.gz -C bundle/funasr
+
+          curl -L --fail --retry 3 \
+            'https://huggingface.co/FunAudioLLM/SenseVoiceSmall-GGUF/resolve/main/sensevoice-small-q8.gguf?download=true' \
+            -o bundle/sensevoice-small-q8.gguf
+          echo '4ae45c94422de949b387e2e0fb10d7e14e4c42c69db30c3444ecc7d4b844b7c5  bundle/sensevoice-small-q8.gguf' | sha256sum -c -
+
+      - name: Build whisper.cpp v1.9.2 CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch v1.9.2 https://github.com/ggml-org/whisper.cpp.git
+          cmake -S whisper.cpp -B whisper.cpp/build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DGGML_NATIVE=OFF \
+            -DWHISPER_BUILD_TESTS=OFF \
+            -DWHISPER_BUILD_SERVER=OFF
+          cmake --build whisper.cpp/build -j2 --target whisper-cli
+          cp whisper.cpp/build/bin/whisper-cli bundle/whisper-cli
+          chmod +x bundle/whisper-cli
+          bundle/whisper-cli --version
+          find bundle/funasr -maxdepth 2 -type f -printf '%p %s bytes\n' | sort
+          ls -lh bundle/sensevoice-small-q8.gguf bundle/whisper-cli
+
+      - name: Upload benchmark bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: asr-benchmark-sensevoice-v1
+          path: bundle/
+          retention-days: 1
+          compression-level: 1
